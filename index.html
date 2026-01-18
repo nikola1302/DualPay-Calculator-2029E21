@@ -3,399 +3,302 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
-<title>DualPay - Изчисляване на ресто</title>
+<title>DualPay – Изчисляване на ресто</title>
 
-<!-- Tailwind CSS CDN -->
+<!-- Tailwind -->
 <script src="https://cdn.tailwindcss.com"></script>
 
-<!-- Шрифтове -->
-<link href="https://fonts.googleapis.com/css2?family=Comfortaa&family=Montserrat&display=swap" rel="stylesheet" />
+<!-- Fonts -->
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa&family=Montserrat&display=swap" rel="stylesheet">
 
 <style>
-  body {
-    font-family: 'Montserrat', sans-serif;
-    background: #EDE7F6;
-    margin: 0; padding: 0;
-    overflow-x: hidden;
-    -webkit-tap-highlight-color: transparent;
-  }
-  h1 {
-    font-family: 'Comfortaa', cursive;
-  }
+body {
+  font-family: 'Montserrat', sans-serif;
+  background:#EDE7F6;
+  margin:0;
+  min-height:100vh;
+  display:flex;
+  align-items:center;       /* вертикален център */
+  justify-content:center;   /* хоризонтален център */
+  overflow-x:hidden;
+  padding:1rem;             /* защита за малки екрани */
+}
 
-  #app {
-    max-width: 400px;
-    margin: 2rem auto;
-    padding: 1.5rem 1.5rem 2rem 1.5rem;
-    background: rgba(255 255 255 / 0.65);
-    border-radius: 1rem;
-    backdrop-filter: blur(14px);
-    box-shadow: 0 12px 25px rgb(0 0 0 / 0.15);
-    position: relative;
-    z-index: 10;
-  }
+h1, #logo { font-family:'Comfortaa', cursive; }
 
-  /* Фон с по-големи клетки и разстояние */
-  #background {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    pointer-events: none;
-    z-index: 0;
-    display: grid;
-    grid-template-columns: repeat(auto-fill, 80px);
-    grid-auto-rows: 80px;
-    justify-content: center;
-    opacity: 0.05;
-  }
-  .bg-symbol {
-    font-family: 'Comfortaa', cursive;
-    font-size: 40px;
-    color: #006994;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    user-select: none;
-    animation: floatAnim 8s ease-in-out infinite;
-    transform-origin: center;
-  }
-  .bg-symbol:nth-child(odd) {
-    animation-delay: 0s;
-  }
-  .bg-symbol:nth-child(even) {
-    animation-delay: 4s;
-  }
+#background {
+  position:fixed;
+  inset:0;
+  display:grid;
+  pointer-events:none;
+  opacity:0.05;
+  z-index:0;
+}
 
-  @keyframes floatAnim {
-    0%, 100% {
-      transform: translate(0,0) rotate(0deg) scale(1);
-    }
-    50% {
-      transform: translate(5px, 5px) rotate(7deg) scale(1.1);
-    }
-  }
+.bg-symbol {
+  font-size:40px;
+  color:#006994;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  animation:float 10s ease-in-out infinite;
+}
 
-  #logo {
-    font-family: 'Comfortaa', cursive;
-    background-color: #006994;
-    color: white;
-    padding: 0.5rem 1rem;
-    border-radius: 1rem;
-    font-size: 1.8rem;
-    user-select: none;
-    display: inline-block;
-  }
+@keyframes float {
+  0%,100% { transform:translate(0,0) rotate(0) scale(1); }
+  50% { transform:translate(8px,8px) rotate(6deg) scale(1.1); }
+}
 
-  .accent {
-    color: #006994;
-  }
-  button {
-    background-color: #006994;
-  }
-  button:hover {
-    background-color: #004e6a;
-  }
+/* App container – compact */
+#app {
+  max-width:360px;
+  margin:0;                 /* махаме auto центрирането */
+  padding:1rem 1rem 1.25rem;
+  background:rgba(255,255,255,.65);
+  backdrop-filter:blur(14px);
+  border-radius:1rem;
+  box-shadow:0 12px 25px rgba(0,0,0,.15);
+  position:relative;
+  z-index:1;
+  background:rgba(255,255,255,.65);
+  backdrop-filter:blur(14px);
+  border-radius:1rem;
+  box-shadow:0 12px 25px rgba(0,0,0,.15);
+  position:relative;
+  z-index:1;
+}
 
-  input, select {
-    font-family: 'Montserrat', sans-serif;
-    font-size: 1rem;
-  }
+#logo {
+  background:#006994;
+  color:#fff;
+  padding:.35rem .8rem;
+  border-radius:.75rem;
+  font-size:1.4rem;
+  display:inline-block;
+}
 
-  #sum-input {
-    background-color: #D0E8FF;
-  }
+.accent { color:#006994; }
 
-  .error {
-    border: 2px solid #dc2626;
-  }
+input, select {
+  font-size:.95rem;
+}
 
-  #change-output {
-    transition: opacity 0.5s ease;
-    opacity: 0;
-  }
-  #change-output.visible {
-    opacity: 1;
-  }
+.error {
+  border:2px solid #dc2626;
+}
 
-  .segmented-control {
-    display: flex;
-    border: 2px solid #006994;
-    border-radius: 1rem;
-    overflow: hidden;
-    width: fit-content;
-    user-select: none;
-  }
-  .segmented-control input[type="radio"] {
-    display: none;
-  }
-  .segmented-control label {
-    padding: 0.5rem 1.5rem;
-    cursor: pointer;
-    background-color: white;
-    color: #006994;
-    font-family: 'Comfortaa', cursive;
-    transition: background-color 0.3s, color 0.3s;
-  }
-  .segmented-control input[type="radio"]:checked + label {
-    background-color: #006994;
-    color: white;
-  }
+#change-output {
+  opacity:0;
+  transition:.4s;
+}
+#change-output.visible {
+  opacity:1;
+}
+
+.segmented {
+  display:flex;
+  border:2px solid #006994;
+  border-radius:999px;
+  overflow:hidden;
+  width:max-content;
+}
+.segmented input { display:none; }
+.segmented label {
+  padding:.4rem 1.1rem;
+  cursor:pointer;
+  font-family:'Comfortaa';
+  color:#006994;
+}
+.segmented input:checked + label {
+  background:#006994;
+  color:#fff;
+}
 </style>
 </head>
+
 <body>
 
 <div id="background"></div>
 
-<div id="app" role="main" aria-label="Приложение за изчисляване на ресто">
+<div id="app">
 
-  <header class="mb-6 text-center">
-    <div id="logo" aria-label="Лого DualPay">€ ⇄ лв</div>
-    <h1 class="text-3xl mt-4 accent">DualPay - Изчисляване на ресто</h1>
-  </header>
+<header class="text-center mb-3">
+  <div id="logo">€ ⇄ лв</div>
+  <h1 class="text-xl mt-2 accent leading-snug">
+    DualPay –<br>Изчисляване на ресто
+  </h1>
 
-  <form id="calc-form" class="space-y-5" novalidate>
+  <!-- Install button -->
+  <button id="installBtn"
+    class="hidden mt-3 px-4 py-2 rounded-lg text-white text-sm font-semibold"
+    style="background:#006994">
+    📲 Инсталирай приложението
+  </button>
+</header>
 
-    <div>
-      <label for="sum" class="block mb-1 font-semibold accent">Сума за плащане</label>
-      <div class="flex gap-2">
-        <input type="number" step="0.01" min="0" id="sum" name="sum" placeholder="0.00"
-          class="rounded-md px-3 py-2 w-full" style="background-color:#D0E8FF;" required aria-required="true" />
-        <select id="sum-currency" name="sum-currency" aria-label="Валута за сума" class="rounded-md px-3 py-2 accent">
-          <option value="BGN">лв</option>
-          <option value="EUR">€</option>
-        </select>
-      </div>
-    </div>
+<form class="space-y-3">
 
-    <div>
-      <label for="paid-bgn" class="block mb-1 font-semibold accent">Платено в лв</label>
-      <input type="number" step="0.01" min="0" id="paid-bgn" name="paid-bgn" placeholder="0.00" class="rounded-md px-3 py-2 w-full" />
-    </div>
+<div>
+  <label class="font-semibold accent">Сума за плащане</label>
+  <div class="flex gap-2">
+    <input id="sum" type="number" step="0.01" class="w-full rounded-md px-3 py-2 bg-blue-100">
+    <select id="sumCur" class="rounded-md px-2 accent">
+      <option value="BGN">лв</option>
+      <option value="EUR">€</option>
+    </select>
+  </div>
+</div>
 
-    <div>
-      <label for="paid-eur" class="block mb-1 font-semibold accent">Платено в €</label>
-      <input type="number" step="0.01" min="0" id="paid-eur" name="paid-eur" placeholder="0.00" class="rounded-md px-3 py-2 w-full" />
-    </div>
+<div>
+  <label class="font-semibold accent">Платено в лв</label>
+  <input id="paidBGN" type="number" step="0.01" class="w-full rounded-md px-3 py-2">
+</div>
 
-    <fieldset class="mb-4">
-      <legend class="font-semibold accent mb-2">Валута за показване на ресто</legend>
-      <div class="segmented-control" role="radiogroup" aria-label="Избор на валута за ресто">
-        <input type="radio" id="change-bgn" name="change-currency" value="BGN" checked />
-        <label for="change-bgn">лв</label>
-        <input type="radio" id="change-eur" name="change-currency" value="EUR" />
-        <label for="change-eur">€</label>
-      </div>
-    </fieldset>
+<div>
+  <label class="font-semibold accent">Платено в €</label>
+  <input id="paidEUR" type="number" step="0.01" class="w-full rounded-md px-3 py-2">
+</div>
 
-    <div id="error-msg" class="text-red-600 font-semibold mb-3 hidden" role="alert" aria-live="assertive">
-      Недостатъчна платена сума!
-    </div>
+<div>
+  <label class="font-semibold accent">Валута за ресто</label>
+  <div class="segmented mt-1">
+    <input type="radio" name="out" id="outBGN" checked>
+    <label for="outBGN">лв</label>
+    <input type="radio" name="out" id="outEUR">
+    <label for="outEUR">€</label>
+  </div>
+</div>
 
-    <div id="change-output" aria-live="polite" aria-atomic="true">
-      <p class="font-semibold accent text-xl">Ресто: <span id="change-value">-</span></p>
-      <p class="text-sm text-gray-600" id="change-secondary"></p>
-    </div>
+<div id="error" class="text-red-600 font-semibold hidden">
+  Недостатъчна платена сума
+</div>
 
-  </form>
+<div id="change-output">
+  <div class="font-semibold accent text-lg">
+    Ресто: <span id="mainChange">0.00 лв</span>
+  </div>
+  <div class="text-sm text-gray-600">
+    ≈ <span id="secChange">0.00 €</span>
+  </div>
+</div>
 
-  <footer class="mt-8 text-center text-gray-600 text-sm select-none">
-    Курс: 1 EUR = 1.95583 BGN<br />
-    © Никола Шакев
-  </footer>
+</form>
+
+<footer class="mt-4 text-center text-xs text-gray-600">
+  Курс: 1 EUR = 1.95583 BGN<br>
+  © Никола ШакеВ
+</footer>
 
 </div>
 
 <script>
-  const RATE = 1.95583;
+const RATE = 1.95583;
 
-  const backgroundEl = document.getElementById('background');
-  function createBackgroundGrid() {
-    const cellSize = 80;
-    const cols = Math.floor(window.innerWidth / cellSize) + 2;
-    const rows = Math.floor(window.innerHeight / cellSize) + 2;
-    backgroundEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
-    backgroundEl.style.gridAutoRows = `${cellSize}px`;
-    backgroundEl.innerHTML = '';
-    let toggle = true;
-    for(let i = 0; i < cols * rows; i++) {
-      const span = document.createElement('span');
-      span.className = 'bg-symbol';
-      span.textContent = toggle ? '€' : 'лв';
-      toggle = !toggle;
-      if (i % cols === cols - 1) toggle = !toggle;
-      backgroundEl.appendChild(span);
-    }
+/* background */
+const bg = document.getElementById('background');
+function bgGrid(){
+  const size=80;
+  const cols=Math.ceil(innerWidth/size);
+  const rows=Math.ceil(innerHeight/size);
+  bg.style.gridTemplateColumns=`repeat(${cols},${size}px)`;
+  bg.innerHTML='';
+  let t=true;
+  for(let i=0;i<cols*rows;i++){
+    const s=document.createElement('div');
+    s.className='bg-symbol';
+    s.textContent=t?'€':'лв';
+    t=!t;
+    if(i%cols===cols-1) t=!t;
+    bg.appendChild(s);
   }
-  createBackgroundGrid();
-  window.addEventListener('resize', createBackgroundGrid);
+}
+bgGrid();
+addEventListener('resize',bgGrid);
 
-  function createIcon() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128; canvas.height = 128;
-    const ctx = canvas.getContext('2d');
+/* calculator */
+const sum=document.getElementById('sum');
+const sumCur=document.getElementById('sumCur');
+const paidBGN=document.getElementById('paidBGN');
+const paidEUR=document.getElementById('paidEUR');
+const main=document.getElementById('mainChange');
+const sec=document.getElementById('secChange');
+const out=document.getElementById('change-output');
+const err=document.getElementById('error');
 
-    ctx.fillStyle = '#006994';
-    ctx.roundRect = function(x,y,w,h,r) {
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
-      ctx.fill();
-    }
-    ctx.roundRect(0, 0, 128, 128, 24);
+function calc(){
+  const s=parseFloat(sum.value)||0;
+  const sbgn=sumCur.value==='BGN'?s:s*RATE;
+  const paid=(parseFloat(paidBGN.value)||0)+(parseFloat(paidEUR.value)||0)*RATE;
 
-    ctx.fillStyle = 'white';
-    ctx.font = 'bold 60px Comfortaa, cursive';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText('€ ⇄ лв', 64, 64);
-
-    return canvas.toDataURL();
+  if(paid<sbgn){
+    err.classList.remove('hidden');
+    out.classList.remove('visible');
+    return;
   }
+  err.classList.add('hidden');
 
-  const iconURL = createIcon();
-  function setFavicon(href) {
-    ['icon', 'apple-touch-icon'].forEach(rel => {
-      let link = document.querySelector(`link[rel="${rel}"]`);
-      if (!link) {
-        link = document.createElement('link');
-        link.rel = rel;
-        document.head.appendChild(link);
-      }
-      link.href = href;
-    });
-  }
-  setFavicon(iconURL);
+  const ch=paid-sbgn;
+  const bgn=document.getElementById('outBGN').checked;
 
-  const sumInput = document.getElementById('sum');
-  const sumCurrency = document.getElementById('sum-currency');
-  const paidBGN = document.getElementById('paid-bgn');
-  const paidEUR = document.getElementById('paid-eur');
-  const errorMsg = document.getElementById('error-msg');
-  const changeOutput = document.getElementById('change-output');
-  const changeValue = document.getElementById('change-value');
-  const changeSecondary = document.getElementById('change-secondary');
-  const changeCurrencyRadios = document.querySelectorAll('input[name="change-currency"]');
+  main.textContent=(bgn?ch:ch/RATE).toFixed(2)+(bgn?' лв':' €');
+  sec.textContent=(bgn?(ch/RATE):ch).toFixed(2)+(bgn?' €':' лв');
+  out.classList.add('visible');
+}
 
-  function calcChange() {
-    const sum = parseFloat(sumInput.value) || 0;
-    const sumCur = sumCurrency.value;
-    const paidB = parseFloat(paidBGN.value) || 0;
-    const paidE = parseFloat(paidEUR.value) || 0;
-    const changeCur = [...changeCurrencyRadios].find(r => r.checked).value;
+[sum,sumCur,paidBGN,paidEUR,outBGN,outEUR].forEach(e=>e.addEventListener('input',calc));
 
-    const sumBGN = sumCur === 'BGN' ? sum : sum * RATE;
-    const paidBGNtotal = paidB + paidE * RATE;
+/* PWA install */
+let deferred;
+const installBtn=document.getElementById('installBtn');
 
-    if (paidBGNtotal < sumBGN) {
-      errorMsg.classList.remove('hidden');
-      changeOutput.classList.remove('visible');
-      sumInput.classList.add('error');
-      paidBGN.classList.add('error');
-      paidEUR.classList.add('error');
-      return;
-    }
-    errorMsg.classList.add('hidden');
-    sumInput.classList.remove('error');
-    paidBGN.classList.remove('error');
-    paidEUR.classList.remove('error');
+addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferred=e;
+  installBtn.classList.remove('hidden');
+});
 
-    const changeBGN = paidBGNtotal - sumBGN;
+installBtn.onclick=async()=>{
+  deferred.prompt();
+  await deferred.userChoice;
+  installBtn.classList.add('hidden');
+};
 
-    let mainChange, secondaryChange, mainSymbol, secondarySymbol;
-    if (changeCur === 'BGN') {
-      mainChange = changeBGN;
-      secondaryChange = mainChange / RATE;
-      mainSymbol = 'лв';
-      secondarySymbol = '€';
-    } else {
-      mainChange = changeBGN / RATE;
-      secondaryChange = changeBGN;
-      mainSymbol = '€';
-      secondarySymbol = 'лв';
-    }
-    changeValue.textContent = mainChange.toFixed(2) + ' ' + mainSymbol;
-    changeSecondary.textContent = `≈ ${secondaryChange.toFixed(2)} ${secondarySymbol}`;
+/* manifest + SW */
+const iconCanvas=document.createElement('canvas');
+iconCanvas.width=128;iconCanvas.height=128;
+const c=iconCanvas.getContext('2d');
+c.fillStyle='#006994';
+c.fillRect(0,0,128,128);
+c.fillStyle='#fff';
+c.font='bold 48px Comfortaa';
+c.textAlign='center';
+c.textBaseline='middle';
+c.fillText('€⇄лв',64,64);
+const icon=iconCanvas.toDataURL();
 
-    changeOutput.classList.add('visible');
-  }
+const manifest={
+  name:'DualPay',
+  short_name:'DualPay',
+  start_url:'.',
+  display:'standalone',
+  theme_color:'#006994',
+  background_color:'#EDE7F6',
+  icons:[{src:icon,sizes:'128x128',type:'image/png'}]
+};
+const mURL=URL.createObjectURL(new Blob([JSON.stringify(manifest)],{type:'application/json'}));
+const ml=document.createElement('link');
+ml.rel='manifest';ml.href=mURL;
+document.head.appendChild(ml);
 
-  [sumInput, sumCurrency, paidBGN, paidEUR].forEach(el =>
-    el.addEventListener('input', calcChange));
-  changeCurrencyRadios.forEach(r => r.addEventListener('change', calcChange));
-
-  calcChange();
-
-  const manifest = {
-    name: 'DualPay',
-    short_name: 'DualPay',
-    start_url: '.',
-    display: 'standalone',
-    background_color: '#EDE7F6',
-    theme_color: '#006994',
-    description: 'PWA за изчисляване на ресто в BGN и EUR',
-    icons: [
-      {
-        src: iconURL,
-        sizes: "128x128",
-        type: "image/png"
-      }
-    ]
-  };
-  const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
-  const manifestURL = URL.createObjectURL(manifestBlob);
-
-  const linkManifest = document.createElement('link');
-  linkManifest.rel = 'manifest';
-  linkManifest.href = manifestURL;
-  document.head.appendChild(linkManifest);
-
-  const swCode = `
-    const CACHE_NAME = 'dualpay-cache-v1';
-    const urlsToCache = ['.'];
-
-    self.addEventListener('install', event => {
-      event.waitUntil(
-        caches.open(CACHE_NAME)
-          .then(cache => cache.addAll(urlsToCache))
-          .then(() => self.skipWaiting())
-      );
-    });
-
-    self.addEventListener('activate', event => {
-      event.waitUntil(
-        caches.keys().then(keys =>
-          Promise.all(
-            keys.filter(key => key !== CACHE_NAME).map(key => caches.delete(key))
-          )
-        ).then(() => self.clients.claim())
-      );
-    });
-
-    self.addEventListener('fetch', event => {
-      event.respondWith(
-        caches.match(event.request)
-          .then(response => response || fetch(event.request))
-      );
+if('serviceWorker'in navigator){
+  const sw=`
+    self.addEventListener('fetch',e=>{
+      e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request)))
     });
   `;
-  const swBlob = new Blob([swCode], {type: 'application/javascript'});
-  const swURL = URL.createObjectURL(swBlob);
-
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register(swURL)
-      .then(() => console.log('Service Worker регистриран успешно'))
-      .catch(err => console.error('Грешка при регистрация на SW:', err));
-  }
+  navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'text/js'})));
+}
 </script>
 
 </body>
 </html>
-
-
